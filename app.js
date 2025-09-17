@@ -2,7 +2,7 @@
 const CLIENT_ID = 'YOUR_CLIENT_ID'; 
 
 // 替換成你的試算表 ID
-const SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID'; 
+const SPREADSHEET_ID = '1C598YLnCC_M7wjwXHIgFyEuPoS6ybcf7OlHMxKfHeng'; 
 
 const API_KEY = 'YOUR_API_KEY'; // 通常用不到，但有時需要
 
@@ -95,7 +95,7 @@ function handleWriteFormSubmit(event) {
 
   gapi.client.sheets.spreadsheets.values.append({
     spreadsheetId: SPREADSHEET_ID,
-    range: '工作表1!A1', // 替換成你的工作表名稱
+    range: 'FCM1_店內機器問題_250717KAY改!A1', // 替換成你的工作表名稱
     valueInputOption: 'USER_ENTERED',
     resource: body
   }).then((response) => {
@@ -114,14 +114,14 @@ function handleWriteFormSubmit(event) {
 function listMajors() {
   gapi.client.sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
-    range: '工作表1!A2:D', // 讀取從第二列開始的資料
+    range: 'FCM1_店內機器問題_250717KAY改!A2:C', // 讀取從第二列開始的資料
   }).then((response) => {
     const range = response.result;
     if (range.values.length > 0) {
       spreadsheetData.innerHTML = ''; // 清空舊資料
       range.values.forEach((row) => {
         const li = document.createElement('li');
-        li.textContent = `店號: ${row[0]}, 品名: ${row[1]}, 數量: ${row[2]}, 備註: ${row[3] || '無'}`;
+        li.textContent = `TRACK NO.: ${row[0]}, 店號: ${row[1]}, 異常發生日期: ${row[2]}, 分類1: ${row[3] || '無'}`;
         spreadsheetData.appendChild(li);
       });
     } else {
