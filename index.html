@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Google Sheets API 範例</title>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <h1>Google 試算表讀寫範例</h1>
+    <p>請先點擊登入按鈕進行授權。</p>
+    <button id="authorize_button">登入 Google</button>
+    <button id="signout_button" style="display: none;">登出</button>
+
+    <hr />
+
+    <h2>寫入資料</h2>
+    <form id="write-form">
+      <div>
+        <label for="storeId">店號:</label>
+        <input type="text" id="storeId" required />
+      </div>
+      <div>
+        <label for="productName">品名:</label>
+        <input type="text" id="productName" required />
+      </div>
+      <div>
+        <label for="quantity">數量:</label>
+        <input type="number" id="quantity" required />
+      </div>
+      <div>
+        <label for="note">備註:</label>
+        <input type="text" id="note" />
+      </div>
+      <button type="submit">新增資料</button>
+    </form>
+
+    <hr />
+
+    <h2>讀取資料</h2>
+    <button id="read_button">讀取試算表</button>
+    <ul id="spreadsheet_data"></ul>
+
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
