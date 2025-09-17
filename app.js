@@ -1,10 +1,10 @@
 // 替換成你的 Client ID
-const CLIENT_ID = 'YOUR_CLIENT_ID'; 
+const CLIENT_ID = '134676641469-apb58502inun874vupj2lfufi5ot06so.apps.googleusercontent.com'; 
 
 // 替換成你的試算表 ID
 const SPREADSHEET_ID = '1C598YLnCC_M7wjwXHIgFyEuPoS6ybcf7OlHMxKfHeng'; 
 
-const API_KEY = 'YOUR_API_KEY'; // 通常用不到，但有時需要
+const API_KEY = 'AIzaSyBBi1DNqrSZkqFnb2eIUB9t2tFWc6FJB0g'; // 通常用不到，但有時需要
 
 // 授權範圍：允許讀取和寫入試算表
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
