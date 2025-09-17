@@ -1,45 +1,53 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Google Sheets API 範例</title>
-    <meta charset="utf-8" />
-  </head>
-  <body>
-    <h1>Google 試算表讀寫範例</h1>
-    <p>請先點擊登入按鈕進行授權。</p>
-    <button id="authorize_button">登入 Google</button>
-    <button id="signout_button" style="display: none;">登出</button>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>Google Sheet Demo</title>
+</head>
+<body>
+  <h1>Google 試算表讀寫範例</h1>
 
-    <hr />
+  <button onclick="loadData()">讀取資料</button>
+  <table border="1" id="sheetData"></table>
 
-    <h2>寫入資料</h2>
-    <form id="write-form">
-      <div>
-        <label for="storeId">TRACK NO.:</label>
-        <input type="text" id="storeId" required />
-      </div>
-      <div>
-        <label for="productName">店號:</label>
-        <input type="text" id="productName" required />
-      </div>
-      <div>
-        <label for="quantity">異常發生日期:</label>
-        <input type="number" id="quantity" required />
-      </div>
-      <div>
-        <label for="note">分類1:</label>
-        <input type="text" id="note" />
-      </div>
-      <button type="submit">新增資料</button>
-    </form>
+  <h2>新增資料</h2>
+  <input type="text" id="col1" placeholder="欄1">
+  <input type="text" id="col2" placeholder="欄2">
+  <input type="text" id="col3" placeholder="欄3">
+  <button onclick="writeData()">寫入</button>
 
-    <hr />
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbwFcEUng7MjofdemrBOkNeNCPVAbuBUr78ghBD6NYpWVeCmFh4nrAYHV-qecm6EP5YS/exec";
 
-    <h2>讀取資料</h2>
-    <button id="read_button">讀取試算表</button>
-    <ul id="spreadsheet_data"></ul>
+    async function loadData() {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      const table = document.getElementById("sheetData");
+      table.innerHTML = "";
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+        row.forEach(cell => {
+          const td = document.createElement("td");
+          td.textContent = cell;
+          tr.appendChild(td);
+        });
+        table.appendChild(tr);
+      });
+    }
 
-    <script src="https://apis.google.com/js/api.js"></script>
-    <script src="app.js"></script>
-  </body>
+    async function writeData() {
+      const col1 = document.getElementById("col1").value;
+      const col2 = document.getElementById("col2").value;
+      const col3 = document.getElementById("col3").value;
+
+      await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ row: [col1, col2, col3] })
+      });
+
+      // 重新載入最新資料
+      loadData();
+    }
+  </script>
+</body>
 </html>
