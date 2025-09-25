@@ -1,53 +1,569 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Google Sheet Demo</title>
+    <meta charset="UTF-8">
+    <title>Google Sheet 讀取 / 寫入 Demo</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        /* Tab 樣式 */
+        .tab-container {
+            display: flex;
+            justify-content: flex-start;
+            margin-bottom: 5px;
+            margin-top: -20px;
+            gap: 10px; /* 新增此行來設定按鈕間距 */
+        }
+
+        .tab-button {
+            background-color: #cccbc2;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+            font-size: 17px;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+
+            .tab-button:hover {
+                background-color: #a6a6a6;
+            }
+
+            .tab-button.active {
+                background-color: #007bff;
+                color: white;
+                border-bottom: 3px solid #007bff;
+            }
+
+        .tab-content {
+            display: none;
+            padding: 10px;
+            border-top: none;
+            border: 2px solid #ff6600;
+        }
+
+        /* 其他通用樣式 */
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f9f9f9;
+        }
+
+        h2, h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .separator {
+            width: 100%; /* 分隔線寬度 */
+            height: 1px; /* 分隔線高度，通常是1px */
+            border-top: 1px solid #ccc; /* 設置頂部邊框，顏色為灰色 */
+            margin-top: 20px; /* 與上方內容的距離 */
+            margin-bottom: 20px; /* 與下方內容的距離 */
+        }
+
+        /* 輸入區塊 */
+        #input-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+            #input-container input[type="text"] {
+                flex: 1 1 220px;
+                height: 40px;
+                font-size: 16px;
+                padding: 5px 10px;
+                border: 1px solid #aaa;
+                border-radius: 6px;
+                box-sizing: border-box;
+            }
+
+        .date-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex: 1 1 220px;
+        }
+
+        .btn-date {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            height: 40px;
+        }
+
+            .btn-date:hover {
+                background-color: #1e7e34;
+            }
+
+        /* 下拉選單 */
+        select {
+            height: 40px;
+            font-size: 16px;
+            padding: 5px;
+            border-radius: 6px;
+            border: 1px solid #aaa;
+            margin-top: 5px;
+        }
+
+        /* 按鈕樣式 */
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            margin-top: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+            button:hover {
+                background-color: #0056b3;
+            }
+
+        /* 表格樣式 */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+            background: white;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) td {
+            background-color: #fafafa;
+        }
+
+        /* 新增的分頁樣式 */
+        #pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+            #pagination-container button {
+                background-color: #6c757d;
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+
+                #pagination-container button:hover:not(:disabled) {
+                    background-color: #5a6268;
+                }
+
+                #pagination-container button:disabled {
+                    cursor: not-allowed;
+                    opacity: 0.5;
+                }
+
+            #pagination-container span {
+                font-size: 16px;
+                color: #555;
+            }
+    </style>
 </head>
 <body>
-  <h1>Google 試算表讀寫範例</h1>
+    <div class="tab-container">
+        <button class="tab-button" onclick="openTab(event, 'tab-login')">登入設定</button>
+        <button class="tab-button" onclick="openTab(event, 'tab-read')">讀取資料</button>
+        <button class="tab-button" onclick="openTab(event, 'tab-write')">新增資料</button>
+    </div>
 
-  <button onclick="loadData()">讀取資料</button>
-  <table border="1" id="sheetData"></table>
+    <!-- Tab Content: 登入設定 -->
+    <div id="tab-login" class="tab-content">
+        <h3>登入設定</h3>
+        <p>請輸入您的 Google App Script URL、試算表網址和工作表名稱。</p>
+        <label>Google App Script：</label>
+        <input id="appUrl" type="text"><br /><br />
+        <label>試算表網址：</label>
+        <input id="sheetsUrl" type="text"><br /><br />
+        <label>工作表名稱：</label>
+        <input id="sheetName" type="text" value="Sheet1"><br /><br />
+    </div>
 
-  <h2>新增資料</h2>
-  <input type="text" id="col1" placeholder="欄1">
-  <input type="text" id="col2" placeholder="欄2">
-  <input type="text" id="col3" placeholder="欄3">
-  <button onclick="writeData()">寫入</button>
+    <!-- Tab Content: 讀取資料 -->
+    <div id="tab-read" class="tab-content">
+        <h3>讀取資料</h3>
+        <button onclick="loadData()">📖 讀取資料</button>
+    </div>
+    <table id="data-table"></table>
+    <div id="pagination-container"></div>
 
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwFcEUng7MjofdemrBOkNeNCPVAbuBUr78ghBD6NYpWVeCmFh4nrAYHV-qecm6EP5YS/exec";
+    <!-- Tab Content: 新增資料 -->
+    <div id="tab-write" class="tab-content">
+        <h3>新增資料</h3>
+        <div id="input-container">
+            <input type="text" placeholder="TRACK NO.">
+            <input type="text" placeholder="店號">
 
-    async function loadData() {
-      const res = await fetch(API_URL);
-      const data = await res.json();
-      const table = document.getElementById("sheetData");
-      table.innerHTML = "";
-      data.forEach(row => {
-        const tr = document.createElement("tr");
-        row.forEach(cell => {
-          const td = document.createElement("td");
-          td.textContent = cell;
-          tr.appendChild(td);
+            <div class="date-wrapper">
+                <input type="text" id="errorDate" placeholder="異常發生日期 (YYMMDD)">
+                <button type="button" class="btn-date">📅</button>
+            </div>
+
+            <select id="category1"></select>
+            <select id="category2"></select>
+            <select id="category3"></select>
+            <select id="category4"></select>
+        </div>
+        <select id="mode">
+            <option value="top">插入最上面</option>
+            <option value="bottom">插入最後</option>
+        </select>
+        <button onclick="writeData()">✏️ 寫入</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <script>
+        // 在這裡，只獲取 DOM 元素
+        const appUrlInput = document.getElementById('appUrl');
+        const sheetsUrlInput = document.getElementById('sheetsUrl');
+        const sheetNameInput = document.getElementById('sheetName');
+
+        const category1Select = document.getElementById('category1');
+        const category2Select = document.getElementById('category2');
+        const category3Select = document.getElementById('category3');
+        const category4Select = document.getElementById('category4');
+
+        // 全域變數來追蹤分頁狀態
+        let currentPage = 1;
+        let totalPages = 1;
+        const ITEMS_PER_PAGE = 50; // 每頁顯示的筆數
+
+        // 儲存分類資料的物件，可擴充
+        const categoriesData = {
+            '01_Power Box (FCM-A02) 電源箱': {
+                '分類2A': {
+                    '分類3A': ['分類4A', '分類4B'],
+                    '分類3B': ['分類4C', '分類4D']
+                },
+                '分類2B': {
+                    '分類3C': ['分類4E', '分類4F'],
+                    '分類3D': ['分類4G', '分類4H']
+                }
+            },
+            '02_Machine Head (Main Body)(FCM-A01) 機頭': {
+                '分類2C': {
+                    '分類3E': ['分類4I', '分類4J'],
+                    '分類3F': ['分類4K', '分類4L']
+                },
+                '分類2D': {
+                    '分類3G': ['分類4M', '分類4N'],
+                    '分類3H': ['分類4O', '分類4P']
+                }
+            },
+            '03_Trash Bin(FCM-A10) 垃圾筒': {
+                '分類2C': {
+                    '分類3E': ['分類4I', '分類4J'],
+                    '分類3F': ['分類4K', '分類4L']
+                },
+                '分類2D': {
+                    '分類3G': ['分類4M', '分類4N'],
+                    '分類3H': ['分類4O', '分類4P']
+                }
+            },
+            '04_Auxiliary Devices (Compressor, Air Tank, Vacuum, etc.) 空壓機、儲氣桶、吸塵器': {
+                '分類2C': {
+                    '分類3E': ['分類4I', '分類4J'],
+                    '分類3F': ['分類4K', '分類4L']
+                },
+                '分類2D': {
+                    '分類3G': ['分類4M', '分類4N'],
+                    '分類3H': ['分類4O', '分類4P']
+                }
+            },
+            '05_Human-machine Interface (HMI) (FCM-A03) 人機': {
+                '分類2C': {
+                    '分類3E': ['分類4I', '分類4J'],
+                    '分類3F': ['分類4K', '分類4L']
+                },
+                '分類2D': {
+                    '分類3G': ['分類4M', '分類4N'],
+                    '分類3H': ['分類4O', '分類4P']
+                }
+            },
+            '06_Label Printer(FCM-A12) 標籤機': {
+                '分類2C': {
+                    '分類3E': ['分類4I', '分類4J'],
+                    '分類3F': ['分類4K', '分類4L']
+                },
+                '分類2D': {
+                    '分類3G': ['分類4M', '分類4N'],
+                    '分類3H': ['分類4O', '分類4P']
+                }
+            },
+            '07_Tray(FCM-A11)': {
+                '分類2C': {
+                    '分類3E': ['分類4I', '分類4J'],
+                    '分類3F': ['分類4K', '分類4L']
+                },
+                '分類2D': {
+                    '分類3G': ['分類4M', '分類4N'],
+                    '分類3H': ['分類4O', '分類4P']
+                }
+            },
+            '08_Air Control Panel 空壓控制面盤': {
+                '分類2C': {
+                    '分類3E': ['分類4I', '分類4J'],
+                    '分類3F': ['分類4K', '分類4L']
+                },
+                '分類2D': {
+                    '分類3G': ['分類4M', '分類4N'],
+                    '分類3H': ['分類4O', '分類4P']
+                }
+            },
+            '09_其他': {
+                '分類2C': {
+                    '分類3E': ['分類4I', '分類4J'],
+                    '分類3F': ['分類4K', '分類4L']
+                },
+                '分類2D': {
+                    '分類3G': ['分類4M', '分類4N'],
+                    '分類3H': ['分類4O', '分類4P']
+                }
+            }
+        };
+
+        document.addEventListener("DOMContentLoaded", function () {
+            // 預設開啟第一個頁籤
+            document.querySelector('.tab-button').click();
+
+            const errorDateInput = document.getElementById("errorDate");
+            const dateButton = document.querySelector(".btn-date");
+
+            // 初始化 Flatpickr，並將其綁定到文字輸入框
+            const fp = flatpickr(errorDateInput, {
+                dateFormat: "ymd", // 設定日期格式為 YYMMDD
+            });
+
+            // 為按鈕添加點擊事件監聽器，當點擊時開啟日期選擇器
+            dateButton.addEventListener("click", function () {
+                fp.open();
+            });
+
+            // 初始化連動下拉選單
+            initDropdowns();
         });
-        table.appendChild(tr);
-      });
-    }
 
-    async function writeData() {
-      const col1 = document.getElementById("col1").value;
-      const col2 = document.getElementById("col2").value;
-      const col3 = document.getElementById("col3").value;
+        function openTab(evt, tabName) {
+            // 宣告所有變數
+            let i, tabcontent, tabbuttons;
 
-      await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({ row: [col1, col2, col3] })
-      });
+            // 取得所有 class 為 "tab-content" 的元素並隱藏
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
 
-      // 重新載入最新資料
-      loadData();
-    }
-  </script>
+            // 取得所有 class 為 "tab-button" 的元素並移除 "active" class
+            tabbuttons = document.getElementsByClassName("tab-button");
+            for (i = 0; i < tabbuttons.length; i++) {
+                tabbuttons[i].className = tabbuttons[i].className.replace(" active", "");
+            }
+
+            // 顯示當前頁籤，並為點擊的按鈕添加 "active" class
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        async function loadData(page = 1) {
+            // 在函式被呼叫時，才去讀取輸入框的最新值
+            const appUrl = appUrlInput.value;
+            const sheetsUrl = sheetsUrlInput.value;
+            const sheetName = sheetNameInput.value;
+
+            const GAS_URL = `https://script.google.com/macros/s/${appUrl}/exec`;
+            const SHEET_URL = `https://docs.google.com/spreadsheets/d/${sheetsUrl}/edit?gid=0`;
+
+            const url = `${GAS_URL}?action=read&url=${encodeURIComponent(SHEET_URL)}&name=${encodeURIComponent(sheetName)}&page=${page}&limit=${ITEMS_PER_PAGE}`;
+
+            try {
+                const res = await fetch(url);
+                const json = await res.json();
+
+                if (json.status === "success") {
+                    renderTable(json.values);
+                    totalPages = json.totalPages;
+                    currentPage = page;
+                    renderPagination();
+                } else {
+                    // 替換 alert 為自定義訊息
+                    const message = "讀取失敗：" + json.message;
+                    console.error(message);
+                }
+            } catch (err) {
+                // 替換 alert 為自定義訊息
+                const message = "讀取失敗：" + err.message;
+                console.error(message);
+            }
+        }
+
+        async function writeData() {
+            const appUrl = appUrlInput.value;
+            const sheetsUrl = sheetsUrlInput.value;
+            const sheetName = sheetNameInput.value;
+
+            const GAS_URL = `https://script.google.com/macros/s/${appUrl}/exec`;
+            const SHEET_URL = `https://docs.google.com/spreadsheets/d/${sheetsUrl}/edit?gid=0`;
+
+            const inputs = document.querySelectorAll("#input-container input[type='text'], #input-container select");
+            const values = Array.from(inputs).map(input => input.value.trim());
+
+            if (values.every(v => v === "")) {
+                // 替換 alert 為自定義訊息
+                console.warn("請至少輸入一個值！");
+                return;
+            }
+
+            const mode = document.getElementById("mode").value;
+
+            const params = {
+                mode: 'write',
+                url: SHEET_URL,
+                name: sheetName,
+                insertAt: mode,
+                values: JSON.stringify(values)
+            };
+
+            const url = `${GAS_URL}?${new URLSearchParams(params)}`;
+
+            try {
+                const res = await fetch(url);
+                const json = await res.json();
+
+                if (json.status === "success") {
+                    // 替換 alert 為自定義訊息
+                    console.log("✅ 寫入成功！插入在第 " + json.row + " 列");
+                    clearInputs();
+                    // 寫入後重新讀取當前頁資料
+                    loadData(currentPage);
+                } else {
+                    // 替換 alert 為自定義訊息
+                    const message = "寫入失敗：" + json.message;
+                    console.error(message);
+                }
+            } catch (err) {
+                // 替換 alert 為自定義訊息
+                const message = "寫入失敗：" + err.message;
+                console.error(message);
+            }
+        }
+
+        function clearInputs() {
+            document.querySelectorAll("#input-container input[type='text'], #input-container select").forEach(input => input.value = "");
+            initDropdowns(); // 清空輸入後重新初始化下拉選單
+        }
+
+        function renderTable(values) {
+            const table = document.getElementById("data-table");
+            table.innerHTML = "";
+            values.forEach((row, i) => {
+                const tr = document.createElement("tr");
+                row.forEach(cell => {
+                    const td = document.createElement(i === 0 ? "th" : "td");
+                    td.textContent = cell;
+                    tr.appendChild(td);
+                });
+                table.appendChild(tr);
+            });
+        }
+
+        // 渲染分頁按鈕的函式
+        function renderPagination() {
+            const paginationContainer = document.getElementById("pagination-container");
+            paginationContainer.innerHTML = '';
+
+            // 上一頁按鈕
+            const prevBtn = document.createElement("button");
+            prevBtn.textContent = "上一頁";
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => loadData(currentPage - 1);
+            paginationContainer.appendChild(prevBtn);
+
+            // 頁碼資訊
+            const pageInfo = document.createElement("span");
+            pageInfo.textContent = `第 ${currentPage} / ${totalPages} 頁`;
+            paginationContainer.appendChild(pageInfo);
+
+            // 下一頁按鈕
+            const nextBtn = document.createElement("button");
+            nextBtn.textContent = "下一頁";
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => loadData(currentPage + 1);
+            paginationContainer.appendChild(nextBtn);
+        }
+
+        // 輔助函式：填充下拉選單
+        function populateDropdown(selectElement, options, placeholder) {
+            selectElement.innerHTML = `<option value="">${placeholder}</option>`;
+            options.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option;
+                opt.textContent = option;
+                selectElement.appendChild(opt);
+            });
+        }
+
+        // 初始化所有下拉選單
+        function initDropdowns() {
+            populateDropdown(category1Select, Object.keys(categoriesData), '請選擇 分類1');
+            // 初始化時，後面的選單都是空的
+            populateDropdown(category2Select, [], '請選擇 分類2');
+            populateDropdown(category3Select, [], '請選擇 分類3');
+            populateDropdown(category4Select, [], '請選擇 分類4');
+        }
+
+        // 監聽第一個下拉選單的變更
+        category1Select.addEventListener('change', () => {
+            const selectedValue = category1Select.value;
+            const nextOptions = selectedValue ? Object.keys(categoriesData[selectedValue]) : [];
+            populateDropdown(category2Select, nextOptions, '請選擇 分類2');
+            // 重設後面的選單
+            populateDropdown(category3Select, [], '請選擇 分類3');
+            populateDropdown(category4Select, [], '請選擇 分類4');
+        });
+
+        // 監聽第二個下拉選單的變更
+        category2Select.addEventListener('change', () => {
+            const selectedCategory1 = category1Select.value;
+            const selectedCategory2 = category2Select.value;
+            const nextOptions = (selectedCategory1 && selectedCategory2) ? Object.keys(categoriesData[selectedCategory1][selectedCategory2]) : [];
+            populateDropdown(category3Select, nextOptions, '請選擇 分類3');
+            // 重設後面的選單
+            populateDropdown(category4Select, [], '請選擇 分類4');
+        });
+
+        // 監聽第三個下拉選單的變更
+        category3Select.addEventListener('change', () => {
+            const selectedCategory1 = category1Select.value;
+            const selectedCategory2 = category2Select.value;
+            const selectedCategory3 = category3Select.value;
+            const nextOptions = (selectedCategory1 && selectedCategory2 && selectedCategory3) ? categoriesData[selectedCategory1][selectedCategory2][selectedCategory3] : [];
+            populateDropdown(category4Select, nextOptions, '請選擇 分類4');
+        });
+    </script>
 </body>
 </html>
